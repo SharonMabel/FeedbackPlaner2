@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manuskript Salon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === GRUNDEINSTELLUNGEN & FARBPALETTE === */
+        :root {
+            --bg-color: #1a1a2e;
+            --primary-color: #16213e;
+            --accent-gold: #e4b780;
+            --accent-gold-glow: #ffdfa8;
+            --text-color: #e0e0e0;
+            --text-muted: #9a9a9a;
+            --font-headings: 'Cormorant Garamond', serif;
+            --font-body: 'Raleway', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top left, rgba(22, 33, 62, 0.8), transparent 40%),
+                              radial-gradient(circle at bottom right, rgba(228, 183, 128, 0.1), transparent 50%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* === TYPOGRAPHIE & HEADER === */
+        h1, h2, h3 {
+            font-family: var(--font-headings);
+            font-weight: 600;
+            text-align: center;
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px rgba(228, 183, 128, 0.3);
+        }
+
+        header {
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 3rem;
+            letter-spacing: 2px;
+        }
+
+        /* === HAUPT-LAYOUT === */
+        .main-container {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 25px;
+            padding: 0 25px 25px;
+            max-width: 98%;
+            margin: 0 auto;
+        }
+
+        /* === AUTOREN-POOL (LINKE SEITE) === */
+        #autoren-pool-container {
+            width: 280px;
+            flex-shrink: 0;
+            padding: 20px;
+            background-color: rgba(0,0,0,0.1);
+            border: 1px solid var(--accent-gold);
+            border-radius: 10px;
+            align-self: flex-start;
+            box-shadow: 0 0 20px rgba(228, 183, 128, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+        #autoren-pool-container.drag-over {
+            border-style: dashed;
+            box-shadow: 0 0 30px var(--accent-gold-glow);
+        }
+        #autoren-pool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--accent-gold);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        #add-author-btn {
+            background: none;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            font-size: 1.5rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #add-author-btn:hover {
+            background-color: var(--accent-gold);
+            color: var(--primary-color);
+            transform: scale(1.1) rotate(90deg);
+        }
+        
+        .autor {
+            padding: 12px;
+            margin: 10px 0;
+            background: linear-gradient(145deg, var(--primary-color), var(--bg-color));
+            border-left: 3px solid var(--accent-gold);
+            border-radius: 5px;
+            user-select: none;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: grab;
+        }
+        .autor:hover {
+            transform: translateX(5px);
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .autor-name {
+            outline: none;
+            cursor: text;
+        }
+        .autor-name:focus {
+            background-color: rgba(255,255,255,0.1);
+            padding: 2px;
+            border-radius: 3px;
+        }
+
+        .autor-controls {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            gap: 5px;
+        }
+        .autor:hover .autor-controls {
+            opacity: 1;
+        }
+        .autor-control-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .autor-control-btn:hover {
+            color: var(--accent-gold);
+        }
+
+        /* === WOCHENÜBERSICHT === */
+        #wochen-container {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 2x7 Layout */
+            gap: 15px;
+        }
+
+        .tag {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 300px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .tag::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+            opacity: 0.7;
+        }
+        
+        .tag.today {
+            background-color: rgba(228, 183, 128, 0.05);
+            border: 1px solid var(--accent-gold);
+        }
+        .tag.today h3 {
+            color: var(--accent-gold-glow);
+        }
+
+        .tag.drag-over {
+            border-style: dashed;
+            box-shadow: inset 0 0 20px rgba(228, 183, 128, 0.3);
+        }
+
+        .tag-header {
+            text-align: center;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+        .tag-header h3 {
+            font-size: 1.5rem;
+        }
+        .tag-header .date {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .tag-content {
+            flex-grow: 1;
+        }
+
+        /* Geplante Autoren im Kalender */
+        .geplant {
+            cursor: pointer;
+        }
+        .geplant .details {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin-top: 5px;
+            padding: 5px 8px;
+            border-left: 2px solid rgba(228, 183, 128, 0.4);
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 0 4px 4px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-style: italic;
+        }
+        
+        .dragging {
+            opacity: 0.4;
+            transform: scale(1.05);
+            background: var(--primary-color);
+            box-shadow: 0 0 15px var(--accent-gold-glow);
+        }
+
+        /* === MODAL FÜR NOTIZEN === */
+        #modal-backdrop {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #modal {
+            background: var(--bg-color);
+            border: 1px solid var(--accent-gold);
+            border-radius: 10px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        #modal h2 {
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        #modal-details-input {
+            width: 100%;
+            min-height: 120px;
+            background: var(--primary-color);
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            color: var(--text-color);
+            font-family: var(--font-body);
+            resize: vertical;
+        }
+        #modal-details-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+        }
+
+        #modal-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--accent-gold);
+            background: none;
+            color: var(--accent-gold);
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.3s ease;
+        }
+        .modal-btn#modal-save-btn {
+            background-color: var(--accent-gold);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <header><h1>Manuskript Salon</h1></header>
+
+    <div class="main-container">
+        <div id="autoren-pool-container" class="dropzone">
+            <div id="autoren-pool-header">
+                <h2>Autoren</h2>
+                <button id="add-author-btn" title="Neuen Autor hinzufügen">+</button>
+            </div>
+            <div id="autoren-liste"></div>
+        </div>
+        <div id="wochen-container"></div>
+    </div>
+
+    <div id="modal-backdrop">
+        <div id="modal">
+            <h2 id="modal-title">Manuskript-Details</h2>
+            <textarea id="modal-details-input" placeholder="Kapitel, Seitenzahl, Genre..."></textarea>
+            <div id="modal-actions">
+                <button class="modal-btn" id="modal-cancel-btn">Abbrechen</button>
+                <button class="modal-btn" id="modal-save-btn">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const autorenListeContainer = document.getElementById('autoren-liste');
+        const addAuthorBtn = document.getElementById('add-author-btn');
+        const wochenContainer = document.getElementById('wochen-container');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDetailsInput = document.getElementById('modal-details-input');
+        const modalSaveBtn = document.getElementById('modal-save-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+        let state = { authors: [], schedule: {} };
+        let draggedItemInfo = null;
+        let activeModalItem = null;
+        
+        function initializeApp() {
+            loadState();
+            renderAll();
+            setupEventListeners();
+        }
+
+        function renderAll() {
+            renderAuthorPool();
+            renderCalendar(); // Ersetzt die alte Render-Logik
+        }
+
+        function setupEventListeners() {
+            addAuthorBtn.addEventListener('click', addNewAuthor);
+            
+            // Event Listener für Dropzones werden jetzt in renderCalendar gesetzt
+            document.getElementById('autoren-pool-container').addEventListener('dragover', handleDragOver);
+            document.getElementById('autoren-pool-container').addEventListener('dragleave', handleDragLeave);
+            document.getElementById('autoren-pool-container').addEventListener('drop', handleDrop);
+
+            modalSaveBtn.addEventListener('click', saveModalDetails);
+            modalCancelBtn.addEventListener('click', closeModal);
+            modalBackdrop.addEventListener('click', (e) => {
+                if (e.target === modalBackdrop) closeModal();
+            });
+        }
+        
+        function renderCalendar() {
+            wochenContainer.innerHTML = '';
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            for(let i = 0; i < 14; i++) {
+                const currentDate = new Date(today);
+                currentDate.setDate(today.getDate() + i);
+
+                const dayId = `day-${currentDate.toISOString().split('T')[0]}`; // z.B. day-2025-07-23
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'tag dropzone';
+                dayDiv.id = dayId;
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'tag-header';
+                
+                const h3 = document.createElement('h3');
+                if (i === 0) {
+                    h3.textContent = 'Heute';
+                    dayDiv.classList.add('today');
+                } else if (i === 1) {
+                    h3.textContent = 'Morgen';
+                } else {
+                    h3.textContent = currentDate.toLocaleDateString('de-DE', { weekday: 'long' });
+                }
+                
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'date';
+                dateSpan.textContent = currentDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+                
+                headerDiv.appendChild(h3);
+                headerDiv.appendChild(dateSpan);
+                dayDiv.appendChild(headerDiv);
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'tag-content';
+                
+                // Geplante Items für diesen Tag einfügen
+                if (state.schedule[dayId]) {
+                    state.schedule[dayId].forEach(item => {
+                        contentDiv.appendChild(createPlannedItemElement(item));
+                    });
+                }
+                
+                dayDiv.appendChild(contentDiv);
+                
+                dayDiv.addEventListener('dragover', handleDragOver);
+                dayDiv.addEventListener('dragleave', handleDragLeave);
+                dayDiv.addEventListener('drop', handleDrop);
+                
+                wochenContainer.appendChild(dayDiv);
+            }
+        }
+        
+        function renderAuthorPool() {
+            autorenListeContainer.innerHTML = '';
+            state.authors.forEach(author => {
+                autorenListeContainer.appendChild(createAuthorPoolElement(author));
+            });
+        }
+        
+        function createAuthorPoolElement(author) {
+            const div = document.createElement('div');
+            div.className = 'autor';
+            div.dataset.authorId = author.id;
+            div.draggable = true;
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'autor-name';
+            nameSpan.textContent = author.name;
+            
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'autor-controls';
+            
+            const editBtn = document.createElement('button');
+            editBtn.className = 'autor-control-btn';
+            editBtn.innerHTML = '&#9998;';
+            editBtn.title = 'Umbenennen';
+            editBtn.onclick = (e) => { e.stopPropagation(); makeNameEditable(nameSpan, author.id); };
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'autor-control-btn';
+            deleteBtn.innerHTML = '&#10005;';
+            deleteBtn.title = 'Löschen';
+            deleteBtn.onclick = (e) => { e.stopPropagation(); deleteAuthor(author.id); };
+            
+            controlsDiv.appendChild(editBtn);
+            controlsDiv.appendChild(deleteBtn);
+            div.appendChild(nameSpan);
+            div.appendChild(controlsDiv);
+
+            div.addEventListener('dragstart', (e) => handleDragStart(e, { authorId: author.id, from: 'pool' }));
+            div.addEventListener('dragend', handleDragEnd);
+            return div;
+        }
+        
+        function createPlannedItemElement(item) {
+            const author = state.authors.find(a => a.id === item.authorId);
+            if (!author) return document.createDocumentFragment();
+
+            const div = document.createElement('div');
+            div.className = 'autor geplant';
+            div.dataset.instanceId = item.instanceId;
+            div.draggable = true;
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'autor-name';
+            nameSpan.textContent = author.name;
+            
+            div.appendChild(nameSpan);
+
+            if (item.details) {
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'details';
+                detailsDiv.textContent = item.details;
+                div.appendChild(detailsDiv);
+            }
+            
+            div.addEventListener('click', () => openModal(item));
+
+            div.addEventListener('dragstart', (e) => {
+                e.stopPropagation();
+                handleDragStart(e, { instanceId: item.instanceId, from: item.dayId });
+            });
+            div.addEventListener('dragend', handleDragEnd);
+            return div;
+        }
+
+        function saveState() {
+            localStorage.setItem('manuskriptSalonState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const savedState = localStorage.getItem('manuskriptSalonState');
+            if (savedState) {
+                const loadedState = JSON.parse(savedState);
+                // Kompatibilitäts-Check: Alte Datenstrukturen ignorieren
+                if (loadedState.authors && loadedState.schedule) {
+                    state = loadedState;
+                } else {
+                    // Fallback, wenn alte, inkompatible Daten gefunden werden
+                    state = { authors: [], schedule: {} };
+                }
+            } else {
+                state = { authors: [], schedule: {} };
+            }
+        }
+        
+        function addNewAuthor() {
+            const newAuthor = { id: 'autor-' + Date.now(), name: 'Neuer Autor' };
+            state.authors.push(newAuthor);
+            saveState();
+            renderAuthorPool();
+            const newElement = document.querySelector(`[data-author-id="${newAuthor.id}"] .autor-name`);
+            if(newElement) makeNameEditable(newElement, newAuthor.id, true);
+        }
+
+        function makeNameEditable(nameSpan, authorId, isNew = false) {
+            nameSpan.contentEditable = true;
+            nameSpan.focus();
+            document.execCommand('selectAll', false, null);
+
+            const saveChanges = () => {
+                nameSpan.contentEditable = false;
+                const newName = nameSpan.textContent.trim();
+                const author = state.authors.find(a => a.id === authorId);
+
+                if (!newName && isNew) {
+                    state.authors = state.authors.filter(a => a.id !== authorId);
+                } else if (author) {
+                    author.name = newName || author.name;
+                }
+                
+                saveState();
+                renderAll();
+                nameSpan.removeEventListener('blur', saveChanges);
+                nameSpan.removeEventListener('keydown', handleKeydown);
+            };
+            
+            const handleKeydown = (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); nameSpan.blur(); }
+                if (e.key === 'Escape') { nameSpan.textContent = state.authors.find(a => a.id === authorId).name; nameSpan.blur(); }
+            };
+
+            nameSpan.addEventListener('blur', saveChanges);
+            nameSpan.addEventListener('keydown', handleKeydown);
+        }
+
+        function deleteAuthor(authorId) {
+            if (confirm("Diesen Autor wirklich löschen? Alle geplanten Einträge dieses Autors werden ebenfalls entfernt.")) {
+                state.authors = state.authors.filter(a => a.id !== authorId);
+                for (const dayId in state.schedule) {
+                    state.schedule[dayId] = state.schedule[dayId].filter(item => item.authorId !== authorId);
+                }
+                saveState();
+                renderAll();
+            }
+        }
+
+        function handleDragStart(e, info) {
+            e.target.classList.add('dragging');
+            draggedItemInfo = info;
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            if (e.target.classList) { // kleiner Check, ob das Element noch existiert
+                e.target.classList.remove('dragging');
+            }
+            draggedItemInfo = null;
+        }
+
+        function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        function handleDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (!draggedItemInfo) return;
+
+            const targetZone = e.currentTarget;
+            let movedItemData = null;
+
+            if (draggedItemInfo.from !== 'pool') {
+                const sourceDayId = draggedItemInfo.from;
+                if(state.schedule[sourceDayId]) {
+                    const itemIndex = state.schedule[sourceDayId].findIndex(i => i.instanceId === draggedItemInfo.instanceId);
+                    if (itemIndex > -1) {
+                        movedItemData = state.schedule[sourceDayId].splice(itemIndex, 1)[0];
+                    }
+                }
+            }
+
+            if (targetZone.classList.contains('tag')) {
+                const targetDayId = targetZone.id;
+                if (!state.schedule[targetDayId]) {
+                    state.schedule[targetDayId] = [];
+                }
+
+                if (movedItemData) {
+                    movedItemData.dayId = targetDayId;
+                    state.schedule[targetDayId].push(movedItemData);
+                } else {
+                    state.schedule[targetDayId].push({
+                        authorId: draggedItemInfo.authorId,
+                        instanceId: 'item-' + Date.now(),
+                        details: '',
+                        dayId: targetDayId
+                    });
+                }
+            }
+
+            saveState();
+            renderAll();
+        }
+
+        function openModal(item) {
+            activeModalItem = item;
+            const author = state.authors.find(a => a.id === item.authorId);
+            modalTitle.textContent = `Details für ${author.name}`;
+            modalDetailsInput.value = item.details || '';
+            modalBackdrop.style.display = 'flex';
+            modalDetailsInput.focus();
+        }
+
+        function closeModal() {
+            modalBackdrop.style.display = 'none';
+            activeModalItem = null;
+        }
+        
+        function saveModalDetails() {
+            if (activeModalItem) {
+                 for (const dayId in state.schedule) {
+                    const itemInState = state.schedule[dayId].find(i => i.instanceId === activeModalItem.instanceId);
+                    if(itemInState) {
+                        itemInState.details = modalDetailsInput.value;
+                        break;
+                    }
+                }
+                saveState();
+                renderAll();
+            }
+            closeModal();
+        }
+
+        initializeApp();
+    });
+    </script>
+</body>
+</html>
